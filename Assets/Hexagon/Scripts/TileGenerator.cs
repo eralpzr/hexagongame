@@ -37,6 +37,7 @@ namespace Assets.Hexagon.Scripts
             if (Slots.Count == 0)
                 return;
 
+            // Check and move tiles to its slot's position
             foreach (var slot in Slots)
             {
                 if (slot.tileObject == null)

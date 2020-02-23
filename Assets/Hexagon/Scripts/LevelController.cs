@@ -78,10 +78,12 @@ namespace Assets.Hexagon.Scripts
             float y = _endTouchPosition.y - _startTouchPosition.y;
 
             var selectedNode = _tileGenerator.Nodes.FirstOrDefault(_ => _.IsSelected);
+            // If only tapped
             if (Mathf.Abs(x) == 0 && Mathf.Abs(y) == 0)
             {
                 OnTapped();
             }
+            // Right or down hand moving
             else if (Mathf.Abs(x) > Mathf.Abs(y) && x > 0 || Mathf.Abs(x) < Mathf.Abs(y) && y < 0)
             {
                 if (selectedNode == null)
@@ -89,6 +91,7 @@ namespace Assets.Hexagon.Scripts
 
                 StartCoroutine(TurnAndCheck(TurnType.Clockwise, selectedNode));
             }
+            // Left or up hand moving
             else
             {
                 if (selectedNode == null)
@@ -111,6 +114,7 @@ namespace Assets.Hexagon.Scripts
                 touchPosition = _mainCamera.ScreenToWorldPoint(touch.position);
             }
 
+            // Get nearest node for touch position
             var foundNode = _tileGenerator
                             .Nodes.OrderBy(x => (touchPosition - x.transform.position).sqrMagnitude)
                             .FirstOrDefault();
@@ -145,6 +149,8 @@ namespace Assets.Hexagon.Scripts
                 i++;
 
                 yield return new WaitForSeconds(0.5f);
+
+                // Check colors on every turn
                 if (found = _tileGenerator.Nodes.Any(x => x.CheckSlotsSameColors()))
                     break;
             }
@@ -165,6 +171,7 @@ namespace Assets.Hexagon.Scripts
                 yield break;
 
             var oldScore = Score;
+            // Get all nodes that have same colors in its slots
             var nodes = _tileGenerator.Nodes.Where(x => x.CheckSlotsSameColors()).ToList();
             var tiles = _tileGenerator.Slots.Select(x => x.tileObject);
             while(nodes.Count > 0)
@@ -174,12 +181,15 @@ namespace Assets.Hexagon.Scripts
                     node.DestroyTiles();
                 }
 
+                // Fill empty slots that just destroyed
                 yield return _tileGenerator.FillEmptySlots();
                 yield return new WaitForSeconds(0.5f);
 
+                // Check and get all nodes that have same colors in its slots again 
                 nodes = _tileGenerator.Nodes.Where(x => x.CheckSlotsSameColors()).ToList();
             }
 
+            // Call tile's 'OnEveryMove' callback after finished move and exit when game is over
             foreach (var tile in tiles)
             {
                 if (tile == null)
@@ -191,12 +201,14 @@ namespace Assets.Hexagon.Scripts
                     yield break;
             }
 
+            // Check there is any move
             if (!CheckValidAnyMove())
             {
                 GameOver("NO MOVES LEFT");
                 yield break;
             }
 
+            // Spawn bomb tile every spawn score
             if (oldScore / _gameDatabaseData.BombTileSpawnScore != Score / _gameDatabaseData.BombTileSpawnScore)
             {
                 SpawnBombTile();
